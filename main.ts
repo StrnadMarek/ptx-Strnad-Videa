@@ -24,37 +24,60 @@ function hideCursor() {
     led.unplot(cursorX, cursorY);
 }
 
+// Vytvoření kopie displaye a zapnutých pozic
+function copy(display: Display): Display {
+    const newDisplay: Display = [
+        [false, false, false, false, false],
+        [false, false, false, false, false],
+        [false, false, false, false, false],
+        [false, false, false, false, false],
+        [false, false, false, false, false]
+    ];
+
+    for (let y = 0; y < display.length; y++) {
+        for (let x = 0; x < display.length; x++) {
+            newDisplay[y][x] = display[y][x]
+        }
+    }
+
+    return newDisplay
+}
+
 let wasLogoPressed: boolean = false
 let lastLogoPressTime: number = 0
-// Spuštění funkce pro zobrazení a skrytí kurzoru v samostatném vlákně
-basic.forever(() => {
-    //držení loga pro další snímek
-    if (input.logoIsPressed() && !wasLogoPressed){
+    basic.forever(() => {
+    //Podržení loga pro uložení snímku
+    if (input.logoIsPressed() && !wasLogoPressed) {
         wasLogoPressed = true
         lastLogoPressTime = control.millis()
-    } else if (input.logoIsPressed() && wasLogoPressed && control.millis() - lastLogoPressTime >= 2000){
-    frames.push(display)
-    lastLogoPressTime = 9999999999999999999999999999999999999999999
-    basic.clearScreen()
-    basic.showIcon(IconNames.Yes);
-    basic.pause(200);
-    basic.clearScreen()
-    } else if(!input.logoIsPressed()) {
+    } else if (input.logoIsPressed() && wasLogoPressed && control.millis() - lastLogoPressTime >= 2000) {
+        frames.push(copy(display))
+        lastLogoPressTime = 99999999999999999999999999999999999999999999
+        basic.clearScreen()
+        basic.showIcon(IconNames.Yes);
+        basic.pause(800);
+        basic.clearScreen()
+    } else if (!input.logoIsPressed()) {
         wasLogoPressed = false
     }
 
-    showCursor();
-    basic.pause(800);
-    hideCursor();
-    basic.pause(800);
+// Spuštění funkce pro zobrazení a skrytí kurzoru
+    if (!lock) {
+        showCursor();
+        basic.pause(800);
+        hideCursor();
+        basic.pause(800);
+    }
 });
 
-//Zobrazuje display (aktuálně nakreslený)
+//Zobrazení zapnutých pozic
 loops.everyInterval(10, function () {
-    for (let y = 0; y < display.length; y++) {
-        for (let x = 0; x < display.length; x++) {
-            if (display[y][x]) {
-                led.plot(x, y);
+    if (!lock) {
+        for (let y = 0; y < display.length; y++) {
+            for (let x = 0; x < display.length; x++) {
+                if (display[y][x]) {
+                    led.plot(x, y);
+                }
             }
         }
     }
@@ -90,7 +113,12 @@ input.onButtonPressed(Button.AB, () => {
 
 input.onLogoEvent(TouchButtonEvent.Pressed, () => {
     hideCursor();
-    cursorY = (cursorY - 1) % 5;
+
+    if (cursorY - 1 < 0){
+        cursorY = 4
+    } else {
+        cursorY -= 1
+    }
     showCursor();
 });
 
@@ -100,8 +128,11 @@ input.onPinPressed(TouchPin.P1, () => {
     showCursor();
 });
 
+let lock: boolean = false
 input.onGesture(Gesture.Shake, () => {
-    // Po dokončení tvorby animace přehraj všechny snímky ve smyčce
+    // Po dokončení tvorby animace přehraje všechny snímky ve smyčce
+    lock = true
+    basic.clearScreen()
     for (const frame of frames) {
         for (let y = 0; y < 5; y++) {
             for (let x = 0; x < 5; x++) {
@@ -112,12 +143,15 @@ input.onGesture(Gesture.Shake, () => {
                 }
             }
         }
-        basic.pause(200); // Rychlost 5 fps
+        basic.pause(2000); // Rychlost 1/5 fps
     }
+    lock = false
 });
 
 input.onPinPressed(TouchPin.P2, () => {
-    // Resetování všech snímků a návrat do editačního režimu
+    // Resetování snímků a zobrazení posledního
     frames = [];
     basic.showIcon(IconNames.Yes);
+    basic.pause(200)
+    basic.clearScreen()
 });
