@@ -35,7 +35,10 @@ basic.forever(() => {
     } else if (input.logoIsPressed() && wasLogoPressed && control.millis() - lastLogoPressTime >= 2000){
     frames.push(display)
     lastLogoPressTime = 9999999999999999999999999999999999999999999
+    basic.clearScreen()
     basic.showIcon(IconNames.Yes);
+    basic.pause(200);
+    basic.clearScreen()
     } else if(!input.logoIsPressed()) {
         wasLogoPressed = false
     }
@@ -46,6 +49,7 @@ basic.forever(() => {
     basic.pause(800);
 });
 
+//Zobrazuje display (aktuálně nakreslený)
 loops.everyInterval(10, function () {
     for (let y = 0; y < display.length; y++) {
         for (let x = 0; x < display.length; x++) {
