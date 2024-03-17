@@ -24,8 +24,22 @@ function hideCursor() {
     led.unplot(cursorX, cursorY);
 }
 
+let wasLogoPressed: boolean = false
+let lastLogoPressTime: number = 0
 // Spuštění funkce pro zobrazení a skrytí kurzoru v samostatném vlákně
 basic.forever(() => {
+    //držení loga pro další snímek
+    if (input.logoIsPressed() && !wasLogoPressed){
+        wasLogoPressed = true
+        lastLogoPressTime = control.millis()
+    } else if (input.logoIsPressed() && wasLogoPressed && control.millis() - lastLogoPressTime >= 2000){
+    frames.push(display)
+    lastLogoPressTime = 9999999999999999999999999999999999999999999
+    basic.showIcon(IconNames.Yes);
+    } else if(!input.logoIsPressed()) {
+        wasLogoPressed = false
+    }
+
     showCursor();
     basic.pause(800);
     hideCursor();
